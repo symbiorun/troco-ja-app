@@ -1,0 +1,26 @@
+{
+  "name": "TrocoJá — Crédito via PIX",
+  "short_name": "TrocoJá",
+  "description": "Transforme o limite do seu cartão em dinheiro na hora via PIX.",
+  "start_url": "/simulacao",
+  "display": "standalone",
+  "background_color": "#f7f9fc",
+  "theme_color": "#006b41",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/assets/logo-vertical.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/logo-vertical.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance"],
+  "lang": "pt-BR"
+}

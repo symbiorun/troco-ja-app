@@ -1,0 +1,169 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Google Fonts ─────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Manrope:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
+
+/* ── Base Reset ───────────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    font-family: 'Manrope', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-surface text-on-surface antialiased;
+    min-height: 100dvh;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Remove arrows from number inputs */
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Custom range slider — verde primário */
+  input[type='range'] {
+    @apply appearance-none w-full h-2 rounded-full bg-surface-container-high cursor-pointer;
+  }
+  input[type='range']::-webkit-slider-thumb {
+    @apply appearance-none w-6 h-6 rounded-full cursor-pointer;
+    background: #006b41;
+    border: 4px solid #ffffff;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
+  }
+  input[type='range']::-moz-range-thumb {
+    @apply w-6 h-6 rounded-full border-4 border-white cursor-pointer;
+    background: #006b41;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Focus ring acessível */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2;
+  }
+}
+
+/* ── Component Utilities ──────────────────────────────────────────────────── */
+@layer components {
+  /* ── Botão primário (pill + gradiente) ─────────────────────────────────── */
+  .btn-primary {
+    @apply w-full py-4 px-8 rounded-full font-headline font-extrabold text-white text-lg
+           transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+    background: linear-gradient(135deg, #006b41 0%, #0a8754 100%);
+    box-shadow: 0 8px 24px -4px rgba(0, 107, 65, 0.35);
+  }
+  .btn-primary:hover:not(:disabled) {
+    box-shadow: 0 12px 32px -4px rgba(0, 107, 65, 0.45);
+    transform: translateY(-1px);
+  }
+
+  /* ── Botão de ação amarelo (finalizar / sacar) ─────────────────────────── */
+  .btn-action {
+    @apply w-full py-4 px-8 rounded-full font-headline font-extrabold text-on-tertiary-fixed text-lg
+           transition-all duration-200 active:scale-[0.98] disabled:opacity-50;
+    background: #fcbb37;
+    box-shadow: 0 8px 24px -4px rgba(252, 187, 55, 0.4);
+  }
+
+  /* ── Botão secundário (outline) ────────────────────────────────────────── */
+  .btn-secondary {
+    @apply w-full py-4 px-8 rounded-full font-headline font-bold text-primary text-lg border-2 border-primary
+           bg-transparent transition-all duration-200 active:scale-[0.98];
+  }
+
+  /* ── Input padrão (Soft Structuralism — sem borda isolada) ────────────── */
+  .input-field {
+    @apply w-full bg-surface-container-lowest rounded-2xl py-5 px-5
+           text-lg font-headline font-extrabold text-on-surface
+           placeholder-outline-variant
+           transition-all duration-200 border-none outline-none;
+  }
+  .input-field:focus {
+    @apply ring-2 ring-primary/20 bg-white;
+  }
+
+  /* ── Card base (sem bordas, tonal) ─────────────────────────────────────── */
+  .card {
+    @apply bg-surface-container-low rounded-3xl p-6;
+  }
+  .card-white {
+    @apply bg-white rounded-3xl p-6 shadow-card;
+  }
+
+  /* ── Bottom CTA glassmorphism ───────────────────────────────────────────── */
+  .bottom-cta {
+    @apply fixed bottom-0 left-0 right-0 px-6 pb-safe-bottom pt-4;
+    background: rgba(247, 249, 252, 0.90);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(189, 202, 191, 0.3);
+  }
+
+  /* ── Progress bar ───────────────────────────────────────────────────────── */
+  .progress-track {
+    @apply h-2 w-full bg-surface-container rounded-full overflow-hidden;
+  }
+  .progress-fill {
+    @apply h-full rounded-full transition-all duration-500 ease-out;
+    background: linear-gradient(90deg, #006b41 0%, #72dba0 100%);
+  }
+
+  /* ── Badge pill ─────────────────────────────────────────────────────────── */
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-bold;
+  }
+  .badge-primary  { @apply badge bg-primary/10 text-primary; }
+  .badge-success  { @apply badge bg-green-100 text-green-700; }
+  .badge-warning  { @apply badge bg-yellow-100 text-yellow-700; }
+  .badge-error    { @apply badge bg-error/10 text-error; }
+  .badge-info     { @apply badge bg-secondary/10 text-secondary; }
+
+  /* ── Material Icons ─────────────────────────────────────────────────────── */
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    font-family: 'Material Symbols Outlined';
+    font-style: normal;
+    font-weight: normal;
+    line-height: 1;
+    display: inline-block;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    direction: ltr;
+    user-select: none;
+  }
+  .icon-filled {
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+}
+
+/* ── Utilities extras ─────────────────────────────────────────────────────── */
+@layer utilities {
+  .pb-safe-bottom {
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  }
+  .pt-safe-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+
+  /* Gradiente de texto verde */
+  .text-gradient-primary {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #006b41, #72dba0);
+  }
+
+  /* Mascote: blend mode para fundo escuro */
+  .mascote-blend {
+    mix-blend-mode: screen;
+  }
+}
