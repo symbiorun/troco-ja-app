@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { createAdminClient } from "@/lib/supabase/server";
+import { notifyNewOperation } from "@/lib/telegram";
 
 const WEBHOOK_TOKEN = process.env.ASAAS_WEBHOOK_TOKEN ?? "";
 
@@ -105,8 +106,28 @@ export async function POST(req: NextRequest) {
           },
         });
 
-        // TODO: Trigger WhatsApp notification to operator
-        // await notifyOperator(application_id, "payment_confirmed");
+        // Busca dados da operação para notificar o admin no Telegram
+        const { data: appData } = await admin
+          .from("applications")
+          .select("id, customer_name, customer_cpf, customer_phone, pix_key, pix_key_type, pix_amount, card_amount, fee_amount")
+          .eq("id", application_id)
+          .single();
+
+        if (appData) {
+          // Não await — dispara em background sem bloquear a resposta ao Asaas
+          notifyNewOperation({
+            applicationId: appData.id,
+            customerName: appData.customer_name,
+            customerCpf: appData.customer_cpf,
+            customerPhone: appData.customer_phone,
+            cardAmount: Number(appData.card_amount),
+            pixAmount: Number(appData.pix_amount),
+            feeAmount: Number(appData.fee_amount ?? 0),
+            pixKey: appData.pix_key,
+            pixKeyType: appData.pix_key_type,
+            paymentId: payment.id,
+          }).catch((err) => console.error("[webhook/asaas] Telegram notify error:", err));
+        }
 
         break;
       }
