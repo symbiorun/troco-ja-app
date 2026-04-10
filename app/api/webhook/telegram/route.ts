@@ -33,6 +33,7 @@ import {
   type PixKeyType,
 } from "@/lib/asaas-pix";
 import { Resend } from "resend";
+import { sendPixConfirmation, sendRejectionNotice } from "@/lib/whatsapp";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const ANTICIPATION_ENABLED = process.env.ASAAS_AUTO_ANTICIPATION === "true";
@@ -233,7 +234,7 @@ async function handleAuthorizePixAction(
     ),
 
     // 3. WhatsApp para o cliente
-    notifyClientWhatsApp(app.customer_phone, app.customer_name, app.pix_amount, pixResult.endToEndId ?? ""),
+    sendPixConfirmation(app.customer_phone, app.customer_name, app.pix_amount, pixResult.endToEndId ?? ""),
 
     // 4. E-mail para o cliente
     notifyClientEmail(app.customer_email, app.customer_name, app.pix_amount, applicationId, pixResult.endToEndId ?? ""),
@@ -286,7 +287,7 @@ async function handleRejectPixAction(
   );
 
   // Notifica o cliente via WhatsApp
-  await notifyClientRejectionWhatsApp(app.customer_phone, app.customer_name);
+  await sendRejectionNotice(app.customer_phone, app.customer_name);
 
   await notifyOperationRejected(applicationId, app.customer_name, "Rejeitado pelo administrador");
 }
@@ -322,85 +323,7 @@ async function handleViewDetailsAction(applicationId: string, chatId: number) {
   );
 }
 
-// ─── Notificações ao cliente ──────────────────────────────────────────────────
-
-async function notifyClientWhatsApp(
-  phone: string,
-  name: string,
-  amount: number,
-  endToEndId: string
-) {
-  try {
-    const zapiBase = process.env.ZAPI_BASE_URL;
-    const instanceId = process.env.ZAPI_INSTANCE_ID;
-    const token = process.env.ZAPI_TOKEN;
-    const clientToken = process.env.ZAPI_CLIENT_TOKEN;
-
-    if (!zapiBase || !instanceId || !token) return;
-
-    const firstName = name.split(" ")[0];
-    const amountFormatted = amount.toFixed(2).replace(".", ",");
-
-    const message =
-      `✅ *TrocoJá - PIX Enviado!*\n\n` +
-      `Olá, ${firstName}! Seu PIX foi enviado com sucesso.\n\n` +
-      `💸 *Valor:* R$ ${amountFormatted}\n` +
-      `🔑 *Comprovante:* ${endToEndId}\n\n` +
-      `O valor já está a caminho da sua conta. Em caso de dúvidas, entre em contato conosco.\n\n` +
-      `_Obrigado por usar o TrocoJá!_ 🙏`;
-
-    // Normaliza telefone (remove +55 se houver, mantém apenas dígitos)
-    const cleanPhone = phone.replace(/\D/g, "").replace(/^55/, "");
-
-    await fetch(
-      `${zapiBase}/instances/${instanceId}/token/${token}/send-text`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Client-Token": clientToken ?? "",
-        },
-        body: JSON.stringify({ phone: `55${cleanPhone}`, message }),
-      }
-    );
-  } catch (err) {
-    console.error("[webhook/telegram] WhatsApp notify error:", err);
-  }
-}
-
-async function notifyClientRejectionWhatsApp(phone: string, name: string) {
-  try {
-    const zapiBase = process.env.ZAPI_BASE_URL;
-    const instanceId = process.env.ZAPI_INSTANCE_ID;
-    const token = process.env.ZAPI_TOKEN;
-    const clientToken = process.env.ZAPI_CLIENT_TOKEN;
-
-    if (!zapiBase || !instanceId || !token) return;
-
-    const firstName = name.split(" ")[0];
-    const cleanPhone = phone.replace(/\D/g, "").replace(/^55/, "");
-
-    const message =
-      `⚠️ *TrocoJá - Operação não processada*\n\n` +
-      `Olá, ${firstName}. Infelizmente sua operação não pôde ser processada neste momento.\n\n` +
-      `Entre em contato com nossa equipe para mais informações.\n\n` +
-      `_Equipe TrocoJá_`;
-
-    await fetch(
-      `${zapiBase}/instances/${instanceId}/token/${token}/send-text`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Client-Token": clientToken ?? "",
-        },
-        body: JSON.stringify({ phone: `55${cleanPhone}`, message }),
-      }
-    );
-  } catch (err) {
-    console.error("[webhook/telegram] WhatsApp rejection notify error:", err);
-  }
-}
+// ─── Notificação por e-mail ao cliente ───────────────────────────────────────
 
 async function notifyClientEmail(
   email: string,
