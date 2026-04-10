@@ -36,9 +36,10 @@ export default function AdminPage() {
   const fetchConfigs = useCallback(async () => {
     const { data } = await supabase.from("admin_configs").select("*").order("key");
     if (data) {
-      setConfigs(data);
+      const typed = data as unknown as AdminConfig[];
+      setConfigs(typed);
       const vals: Record<string, string> = {};
-      data.forEach((c) => { vals[c.key] = c.value; });
+      typed.forEach((c) => { vals[c.key] = c.value; });
       setEditedConfigs(vals);
     }
     setLoading(false);
@@ -49,7 +50,7 @@ export default function AdminPage() {
       .from("profiles")
       .select("id, email, full_name, role, created_at, is_active")
       .order("created_at", { ascending: false });
-    if (data) setUsers(data);
+    if (data) setUsers(data as unknown as Profile[]);
   }, [supabase]);
 
   useEffect(() => {
@@ -62,10 +63,8 @@ export default function AdminPage() {
     setSaveMsg("");
     try {
       for (const [key, value] of Object.entries(editedConfigs)) {
-        await supabase
-          .from("admin_configs")
-          .update({ value, updated_at: new Date().toISOString() })
-          .eq("key", key);
+
+        await (supabase as any).from("admin_configs").update({ value, updated_at: new Date().toISOString() }).eq("key", key);
       }
       setSaveMsg("Configurações salvas com sucesso!");
       await fetchConfigs();
@@ -79,7 +78,8 @@ export default function AdminPage() {
 
   async function toggleUserRole(userId: string, currentRole: string) {
     const newRole = currentRole === "operator" ? "client" : "operator";
-    await supabase.from("profiles").update({ role: newRole }).eq("id", userId);
+    // eslint-disable-next-line -- profiles table not in generated Supabase types
+    await (supabase as any).from("profiles").update({ role: newRole }).eq("id", userId);
     await fetchUsers();
   }
 
@@ -341,15 +341,17 @@ function ReportsTab() {
 
       if (!data) return;
 
-      const completed = data.filter((a) => a.status === "completed");
+      type AppRow = { status: string; card_total: number; pix_amount: number; channel: string };
+      const rows = data as unknown as AppRow[];
+      const completed = rows.filter((a) => a.status === "completed");
       const revenue = completed.reduce((s, a) => s + (a.card_total - a.pix_amount), 0);
       const avgTicket = completed.length ? completed.reduce((s, a) => s + a.pix_amount, 0) / completed.length : 0;
       const byChannel = {
-        online: data.filter((a) => a.channel === "online_link").length,
-        machine: data.filter((a) => a.channel === "machine_delivery").length,
+        online: rows.filter((a) => a.channel === "online_link").length,
+        machine: rows.filter((a) => a.channel === "machine_delivery").length,
       };
 
-      setStats({ total: data.length, completed: completed.length, revenue, avgTicket, byChannel });
+      setStats({ total: rows.length, completed: completed.length, revenue, avgTicket, byChannel });
     }
     load();
   }, [supabase]);

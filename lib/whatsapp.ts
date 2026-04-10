@@ -210,7 +210,7 @@ export interface ParsedWebhookMessage {
  * O UAZAPI envia: { event: "message", instance: "...", data: { key, message, ... } }
  */
 export function parseWebhookPayload(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   payload: any
 ): ParsedWebhookMessage | null {
   try {

@@ -190,9 +190,9 @@ export default function PagamentoPage() {
       {/* CTA bottom — only for online with confirmed */}
       {paymentStatus === "ready" && (
         <BottomCTA
-          label={paymentStatus === "polling" ? "Verificando..." : "Já paguei — confirmar"}
+          label="Já paguei — confirmar"
           onClick={checkPaymentStatus}
-          disabled={paymentStatus === "polling"}
+          disabled={false}
           variant="action"
           icon="check_circle"
         />

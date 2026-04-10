@@ -187,7 +187,7 @@ async function sendWhatsAppMessage(
 async function executeSideEffect(
   effect: NonNullable<ReturnType<typeof createNewSession>['data']> & { type?: string },
   phone: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   admin: any
 ) {
   const e = effect as { type: string; [key: string]: unknown }
@@ -222,7 +222,7 @@ async function executeSideEffect(
 // Função para enviar mensagens proativas (chamada por outros sistemas)
 // Ex: quando status da aplicação muda, notifica o cliente pelo WhatsApp
 // ----------------------------------------------------------------
-export async function sendProactiveMessage(
+async function sendProactiveMessage(
   phone: string,
   event: string,
   data: Record<string, string>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { createAdminClient } from "@/lib/supabase/server";
 import { notifyNewOperation } from "@/lib/telegram";
+import { logger } from "@/lib/logger";
 
 const WEBHOOK_TOKEN = process.env.ASAAS_WEBHOOK_TOKEN ?? "";
 
@@ -126,7 +127,7 @@ export async function POST(req: NextRequest) {
             pixKey: appData.pix_key,
             pixKeyType: appData.pix_key_type,
             paymentId: payment.id,
-          }).catch((err) => console.error("[webhook/asaas] Telegram notify error:", err));
+          }).catch((err) => logger.error("[webhook/asaas] Telegram notify error", { error: String(err) }));
         }
 
         break;
@@ -176,8 +177,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ status: "ok", event });
   } catch (err) {
-    console.error("[POST /api/webhook/asaas]", err);
-    // Return 200 to prevent Asaas from retrying a legitimate server error
-    return NextResponse.json({ error: "Internal error" }, { status: 200 });
+    logger.error("[POST /api/webhook/asaas]", { error: String(err) });
+    // Return 500 so Asaas retries. Idempotency key prevents duplicate processing on retry.
+    return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }

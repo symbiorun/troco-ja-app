@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServerClient, createAdminClient } from "@/lib/supabase/server";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 const CreateApplicationSchema = z.object({
   // Simulation data
@@ -29,6 +30,9 @@ const CreateApplicationSchema = z.object({
  * Logs the creation event in application_logs.
  */
 export async function POST(req: NextRequest) {
+  if (!rateLimit(getClientIp(req), 'aplicacao', 5, 60_000)) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
   try {
     const supabase = await createServerClient();
     const { data: { user }, error: authErr } = await supabase.auth.getUser();

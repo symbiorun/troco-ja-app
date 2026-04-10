@@ -9,6 +9,7 @@ import { createServerClient, createAdminClient } from '@/lib/supabase/server'
 import { runRiskAnalysis } from '@/lib/ai/agents/risk'
 import { buildAIAuditEntry } from '@/lib/ai/client'
 import type { RiskInput } from '@/lib/ai/types'
+import { logger } from '@/lib/logger'
 
 const ScoreSchema = z.object({
   applicationId: z.string().uuid(),
@@ -129,7 +130,7 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('[/api/ai/risk/score]', error)
+    logger.error('[/api/ai/risk/score]', { error: String(error) })
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }

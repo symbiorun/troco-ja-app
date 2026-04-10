@@ -24,14 +24,21 @@ export async function GET(
     const paymentId = params.id;
 
     // First check our own DB (webhook may have already confirmed)
+    // Also verify ownership: the authenticated user must own the application
     const { data: payment } = await supabase
       .from("payments")
-      .select("status, external_id, application_id")
+      .select("status, external_id, application_id, applications!inner(user_id)")
       .eq("external_id", paymentId)
       .single();
 
-    if (payment?.status === "confirmed" || payment?.status === "received") {
-      return NextResponse.json({ status: "CONFIRMED", source: "webhook" });
+    if (payment) {
+      const paymentRow = payment as unknown as { status: string; external_id: string; application_id: string; applications: { user_id: string } };
+      if (paymentRow.applications?.user_id !== user.id) {
+        return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
+      }
+      if (paymentRow.status === "confirmed" || paymentRow.status === "received") {
+        return NextResponse.json({ status: "CONFIRMED", source: "webhook" });
+      }
     }
 
     // Poll Asaas directly

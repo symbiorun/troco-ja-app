@@ -1,3 +1,6 @@
+// Prevent static pre-rendering — staff pages require Supabase auth at runtime
+export const dynamic = 'force-dynamic'
+
 /**
  * Layout do painel operacional (operador/admin)
  */

@@ -17,6 +17,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 import {
   answerCallbackQuery,
   editMessage,
@@ -35,7 +36,6 @@ import {
 import { Resend } from "resend";
 import { sendPixConfirmation, sendRejectionNotice } from "@/lib/whatsapp";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const ANTICIPATION_ENABLED = process.env.ASAAS_AUTO_ANTICIPATION === "true";
 
 // ─── Handler principal ────────────────────────────────────────────────────────
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("[POST /api/webhook/telegram]", err);
+    logger.error("[POST /api/webhook/telegram]", { error: String(err) });
     // Sempre retorna 200 para o Telegram não retentar
     return NextResponse.json({ ok: true });
   }
@@ -125,9 +125,9 @@ async function handleAuthorizePixAction(
     return;
   }
 
-  // Verifica se já foi processada (idempotência)
-  if (app.status === "pix_sent" || app.status === "completed") {
-    await editMessage(chatId, messageId, `⚠️ <b>PIX já enviado</b> para operação <code>${applicationId}</code>`);
+  // Verifica se já foi processada (idempotência — verificação inicial)
+  if (app.status === "pix_sent" || app.status === "completed" || app.status === "pix_processing") {
+    await editMessage(chatId, messageId, `⚠️ <b>PIX já enviado ou em processamento</b> para operação <code>${applicationId}</code>`);
     return;
   }
 
@@ -152,11 +152,19 @@ async function handleAuthorizePixAction(
     }
   }
 
-  // Atualiza status para "pix_processing" antes de enviar
-  await admin
+  // Atualiza status para "pix_processing" atomicamente — previne race condition
+  // Only advances if current status is "payment_confirmed" (single atomic write)
+  const { data: updatedRows } = await admin
     .from("applications")
     .update({ status: "pix_processing", updated_at: new Date().toISOString() })
-    .eq("id", applicationId);
+    .eq("id", applicationId)
+    .in("status", ["payment_confirmed"]) // guard against concurrent execution
+    .select("id");
+
+  if (!updatedRows || updatedRows.length === 0) {
+    await editMessage(chatId, messageId, `⚠️ <b>Operação já em processamento ou status inválido.</b>\n\nOperação: <code>${applicationId}</code>`);
+    return;
+  }
 
   await editMessage(chatId, messageId, `⏳ <b>Enviando PIX...</b>\n\nValor: R$ ${app.pix_amount.toFixed(2)}\nChave: <code>${app.pix_key}</code>`);
 
@@ -332,6 +340,7 @@ async function notifyClientEmail(
   applicationId: string,
   endToEndId: string
 ) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   try {
     if (!process.env.RESEND_API_KEY || !email) return;
 
@@ -396,6 +405,6 @@ async function notifyClientEmail(
       `,
     });
   } catch (err) {
-    console.error("[webhook/telegram] Email notify error:", err);
+    logger.error("[webhook/telegram] Email notify error", { error: String(err) });
   }
 }

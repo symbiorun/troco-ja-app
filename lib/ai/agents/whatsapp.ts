@@ -109,7 +109,7 @@ function buildContextPrompt(input: WhatsAppAgentInput): string {
   return `=== ESTADO ATUAL DA SESSÃO ===
 Estado: ${session.state}
 Dados coletados: ${JSON.stringify(session.data, null, 2)}
-Application ID: ${session.applicationId ?? 'não criada ainda'}
+Application ID: ${session.data.applicationId ?? 'não criada ainda'}
 Tentativas neste estado: ${session.attemptCount}
 
 === HISTÓRICO RECENTE ===
@@ -212,15 +212,15 @@ export function applyAgentResponse(
   }
 
   // Adiciona ao histórico
-  updated.conversationHistory = [
+  updated.conversationHistory = ([
     ...session.conversationHistory,
-    { role: 'user', content: incomingMessage, ts: new Date().toISOString() },
+    { role: 'user' as const, content: incomingMessage, ts: new Date().toISOString() },
     {
-      role: 'assistant',
+      role: 'assistant' as const,
       content: agentResponse.messages.map(m => m.text).join(' | '),
       ts: new Date().toISOString(),
     },
-  ].slice(-20) // Mantém apenas últimas 20 mensagens
+  ] as Array<{ role: 'user' | 'assistant'; content: string; ts: string }>).slice(-20) // Mantém apenas últimas 20 mensagens
 
   return updated
 }

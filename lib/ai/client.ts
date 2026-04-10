@@ -223,7 +223,7 @@ export function textPart(text: string): ORContentPart {
 export function buildAIAuditEntry(
   task: AITask,
   applicationId: string | null,
-  usage: { estimatedCostUsd: number; totalTokens: number },
+  usage: { estimatedCostUsd?: number; totalTokens: number },
   model: string,
   latencyMs: number
 ) {

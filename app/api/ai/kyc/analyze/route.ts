@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { createServerClient, createAdminClient } from '@/lib/supabase/server'
 import { runKYCAnalysis } from '@/lib/ai/agents/kyc'
 import { buildAIAuditEntry } from '@/lib/ai/client'
+import { logger } from '@/lib/logger'
 
 const AnalyzeSchema = z.object({
   applicationId: z.string().uuid(),
@@ -123,7 +124,7 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('[/api/ai/kyc/analyze]', error)
+    logger.error('[/api/ai/kyc/analyze]', { error: String(error) })
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }

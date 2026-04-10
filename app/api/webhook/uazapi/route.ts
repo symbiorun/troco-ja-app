@@ -15,6 +15,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 import {
   parseWebhookPayload,
   sendMessage,
@@ -123,7 +124,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("[POST /api/webhook/uazapi]", error);
+    logger.error("[POST /api/webhook/uazapi]", { error: String(error) });
     return NextResponse.json({ ok: true }); // 200 para evitar retry infinito
   }
 }
@@ -131,10 +132,10 @@ export async function POST(req: NextRequest) {
 // ─── Side effects do agente ───────────────────────────────────────────────────
 
 async function executeSideEffect(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   effect: any,
   phone: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   admin: any
 ) {
   const e = effect as { type: string; [key: string]: unknown };
@@ -196,7 +197,7 @@ async function executeSideEffect(
  * Envia mensagem proativa baseada em evento do sistema.
  * Ex: status da aplicação mudou → notifica o cliente.
  */
-export async function sendProactiveMessage(
+async function sendProactiveMessage(
   phone: string,
   event: string,
   data: Record<string, string>

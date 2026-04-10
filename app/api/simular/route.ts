@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/server";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 const SimulateSchema = z.object({
   pixAmount: z.number().positive("Valor PIX deve ser positivo"),
@@ -14,6 +15,9 @@ const SimulateSchema = z.object({
  * Formula: cardTotal = (pixAmount × (1 + marginPct/100)) / (1 - feePct/100)
  */
 export async function POST(req: NextRequest) {
+  if (!rateLimit(getClientIp(req), 'simular', 10, 60_000)) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
   try {
     const body = await req.json();
     const parsed = SimulateSchema.safeParse(body);

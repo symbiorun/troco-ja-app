@@ -54,10 +54,10 @@ export default function StatusPage() {
       const { data } = await supabase
         .from("applications")
         .select("status")
-        .eq("id", appId)
+        .eq("id", appId as string)
         .single();
 
-      if (data?.status) setStatus(data.status as ApplicationStatus);
+      if (data && (data as { status?: string }).status) setStatus((data as { status: string }).status as ApplicationStatus);
       setLoading(false);
     }
 
